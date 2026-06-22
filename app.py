@@ -207,20 +207,23 @@ def render_task_row(task, show_complete=True, show_restore=False, context_key=""
     # תוכן המשימה
     with cols[1]:
         priority_icon = PRIORITY_ICONS[task["priority"]]
-        st.markdown(
-            f"""
-            <div class="{css_class}" style="margin:0;">
-                <div class="task-title">{priority_icon} {task['title']}</div>
-                <div class="task-meta">
-                    {CATEGORY_ICONS[task['category']]} {CATEGORY_LABELS[task['category']]}
-                    {' · 👤 ריקי' if task.get('owner') == 'riki' else ''}
-                    · דחיפות: {PRIORITY_LABELS[task['priority']]}
-                </div>
-                {f'<div class="task-meta">📝 {task["description"]}</div>' if task.get("description") else ''}
-            </div>
-            """,
-            unsafe_allow_html=True,
+        cat_part = f'{CATEGORY_ICONS[task["category"]]} {CATEGORY_LABELS[task["category"]]}'
+        owner_part = " · 👤 ריקי" if task.get("owner") == "riki" else ""
+        prio_part = f' · דחיפות: {PRIORITY_LABELS[task["priority"]]}'
+        meta_text = cat_part + owner_part + prio_part
+
+        desc_html = ""
+        if task.get("description"):
+            desc_html = f'<div class="task-meta">📝 {task["description"]}</div>'
+
+        card_html = (
+            f'<div class="{css_class}" style="margin:0;">'
+            f'<div class="task-title">{priority_icon} {task["title"]}</div>'
+            f'<div class="task-meta">{meta_text}</div>'
+            f'{desc_html}'
+            f'</div>'
         )
+        st.markdown(card_html, unsafe_allow_html=True)
 
     # תאריך יעד
     with cols[2]:
@@ -666,19 +669,17 @@ def page_archive():
                     restore_task_action(task["id"])
                     st.rerun()
             with cols[1]:
-                st.markdown(
-                    f"""
-                    <div class="task-card" style="margin:0;opacity:0.85;">
-                        <div class="task-title">✅ {task['title']}</div>
-                        <div class="task-meta">
-                            {CATEGORY_ICONS[task['category']]} {CATEGORY_LABELS[task['category']]}
-                            {' · 👤 ריקי' if task.get('owner') == 'riki' else ''}
-                            · דחיפות: {PRIORITY_LABELS[task['priority']]}
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
+                cat_part = f'{CATEGORY_ICONS[task["category"]]} {CATEGORY_LABELS[task["category"]]}'
+                owner_part = " · 👤 ריקי" if task.get("owner") == "riki" else ""
+                prio_part = f' · דחיפות: {PRIORITY_LABELS[task["priority"]]}'
+                meta_text = cat_part + owner_part + prio_part
+                card_html = (
+                    f'<div class="task-card" style="margin:0;opacity:0.85;">'
+                    f'<div class="task-title">✅ {task["title"]}</div>'
+                    f'<div class="task-meta">{meta_text}</div>'
+                    f'</div>'
                 )
+                st.markdown(card_html, unsafe_allow_html=True)
             with cols[2]:
                 st.markdown(f'<span class="due-badge-ok">הושלמה: {completed_date}</span>', unsafe_allow_html=True)
             with cols[3]:

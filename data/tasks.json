@@ -26,5 +26,19 @@
     "created_at": "2026-06-22T08:23:23.915669",
     "updated_at": "2026-06-22T08:23:23.915669",
     "source": "manual"
+  },
+  {
+    "id": "1efbe4b1-3051-4323-aa06-d1c3c280d696",
+    "title": "בדיקה",
+    "description": "בדיקה",
+    "category": "crm",
+    "owner": "self",
+    "priority": "medium",
+    "due_date": "2026-06-26",
+    "archived": false,
+    "completed_at": null,
+    "created_at": "2026-06-22T08:23:44.621027",
+    "updated_at": "2026-06-22T08:23:44.621027",
+    "source": "manual"
   }
 ]

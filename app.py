@@ -159,6 +159,11 @@ def get_tasks(category=None, owner=None, archived=False):
     return sorted(tasks, key=sort_key)
 
 
+def navigate_to(page_id):
+    """ניווט תכנותי בין עמודים - לשימוש עם on_click של כפתורים."""
+    st.session_state.page_key = page_id
+
+
 # ============================================================
 # רכיבי UI
 # ============================================================
@@ -178,7 +183,7 @@ def render_due_badge(task):
 
 def render_task_row(task, show_complete=True, show_restore=False, context_key=""):
     """שורת משימה אחת - צ'קבוקס, כותרת, badges, כפתורי עריכה/מחיקה.
-    
+
     context_key מאפשר רינדור של אותה משימה במספר מקומות בלי התנגשות widget keys.
     """
     css_class = "task-card"
@@ -303,7 +308,7 @@ def render_add_form(category, default_owner="self", show_owner=False, key_suffix
                 priority = st.selectbox(
                     "רמת דחיפות",
                     PRIORITIES,
-                    index=1,  # default: medium
+                    index=1,
                     format_func=lambda p: f"{PRIORITY_ICONS[p]} {PRIORITY_LABELS[p]}",
                 )
             with c2:
@@ -361,10 +366,15 @@ PAGES = {
     "archive": "🗄️ ארכיון",
     "settings": "⚙️ הגדרות וסנכרון",
 }
+# אתחול state לניווט תכנותי בין עמודים
+if "page_key" not in st.session_state:
+    st.session_state.page_key = "dashboard"
+
 page = st.sidebar.radio(
     "ניווט",
     options=list(PAGES.keys()),
     format_func=lambda k: PAGES[k],
+    key="page_key",
     label_visibility="collapsed",
 )
 
@@ -403,7 +413,6 @@ def page_dashboard():
     # מטריקות
     total = len(active_tasks)
     completed = len([t for t in st.session_state.tasks if t.get("archived")])
-    by_cat = {c: len([t for t in active_tasks if t.get("category") == c]) for c in CATEGORIES}
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("משימות פעילות", total)
@@ -437,17 +446,34 @@ def page_dashboard():
 
     st.markdown("---")
 
-    # סיכום לפי קטגוריה
+    # סיכום לפי קטגוריה - לחיצה מנווטת לעמוד הקטגוריה
     st.subheader("📂 חלוקה לפי קטגוריה")
+    st.caption("💡 לחיצה על כפתור מובילה ישירות לעמוד הקטגוריה")
     cat_cols = st.columns(len(CATEGORIES))
     for col, cat in zip(cat_cols, CATEGORIES):
         with col:
             cat_tasks = [t for t in active_tasks if t.get("category") == cat]
             cat_overdue = [t for t in cat_tasks if is_overdue(t)]
+            cat_soon = [t for t in cat_tasks if is_due_soon(t)]
+
+            # כותרת
             st.markdown(f"### {CATEGORY_ICONS[cat]} {CATEGORY_LABELS[cat]}")
-            st.metric("פעילות", len(cat_tasks))
+
+            # כפתור עם מספר המשימות - לחיצה מנווטת לקטגוריה
+            badges = ""
             if cat_overdue:
-                st.markdown(f"<span style='color:#dc2626'>🔴 {len(cat_overdue)} באיחור</span>", unsafe_allow_html=True)
+                badges += f"  ·  🔴 {len(cat_overdue)} באיחור"
+            if cat_soon:
+                badges += f"  ·  🟡 {len(cat_soon)} בקרוב"
+
+            st.button(
+                f"📋 {len(cat_tasks)} משימות פעילות{badges}",
+                key=f"dash_nav_{cat}",
+                use_container_width=True,
+                on_click=navigate_to,
+                args=(cat,),
+                type="primary" if cat_overdue else "secondary",
+            )
 
 
 # ============================================================
@@ -459,7 +485,6 @@ def page_category(cat_key, show_riki=False):
     st.title(f"{icon} {label}")
 
     if show_riki:
-        # מוקד עם שתי טבלאות: שלי + של ריקי
         tab_mine, tab_riki = st.tabs(["👤 המשימות שלי", "👥 המשימות של ריקי"])
 
         with tab_mine:
@@ -474,7 +499,6 @@ def page_category(cat_key, show_riki=False):
             st.markdown(f"**{len(riki_tasks)} משימות פעילות**")
             render_task_list(riki_tasks, empty_message="אין משימות פעילות של ריקי", context_key=f"{cat_key}_riki")
     else:
-        # עמוד קטגוריה רגיל
         tasks = get_tasks(category=cat_key)
         render_add_form(cat_key, default_owner="self", show_owner=False)
         st.markdown(f"**{len(tasks)} משימות פעילות**")
@@ -491,7 +515,6 @@ def page_smart_add():
         "Claude יקרא, יסווג לקטגוריה, יחלץ דד-ליין ודחיפות, ויציע משימה לאישור שלך."
     )
 
-    # בדיקת מפתח API
     try:
         api_key = st.secrets["anthropic"]["api_key"]
     except (KeyError, FileNotFoundError):
@@ -499,12 +522,11 @@ def page_smart_add():
             "⚠️ לא הוגדר Anthropic API key. כדי להפעיל את הסיווג החכם:\n"
             "1. הירשמי ב-https://console.anthropic.com\n"
             "2. צרי API key\n"
-            "3. הוסיפי ב-`.streamlit/secrets.toml`:\n"
+            "3. הוסיפי ב-Secrets:\n"
             "```toml\n[anthropic]\napi_key = \"sk-ant-...\"\n```"
         )
         return
 
-    # תיבת הקלט
     text = st.text_area(
         "טקסט לסיווג",
         height=200,
@@ -535,13 +557,11 @@ def page_smart_add():
                 st.error(f"שגיאה בסיווג: {e}")
                 return
 
-    # הצגת הצעת Claude לאישור
     if "ai_suggestion" in st.session_state:
         sug = st.session_state.ai_suggestion
         st.markdown("---")
         st.subheader("📋 הצעת Claude")
 
-        # ציון ביטחון
         confidence = sug.get("confidence", 0.0)
         if confidence >= 0.8:
             st.success(f"רמת ביטחון: {int(confidence*100)}% ✅")
@@ -553,7 +573,6 @@ def page_smart_add():
         if sug.get("reasoning"):
             st.caption(f"💭 {sug['reasoning']}")
 
-        # טופס אישור/עריכה
         with st.form("confirm_ai_suggestion"):
             title = st.text_input("כותרת", value=sug.get("suggested_title", ""))
 
@@ -583,7 +602,6 @@ def page_smart_add():
                         pass
                 due_date = st.date_input("תאריך יעד", value=suggested_due, format="DD/MM/YYYY")
             with c4:
-                # בעלים רק אם הקטגוריה היא מוקד
                 if category == "moked":
                     owner = st.radio(
                         "משימה של:",
@@ -639,7 +657,6 @@ def page_archive():
         st.info("הארכיון ריק. משימות שתסמני כהושלמו יופיעו כאן.")
         return
 
-    # פילטרים
     c1, c2 = st.columns([0.3, 0.7])
     with c1:
         cat_filter = st.selectbox(
@@ -656,7 +673,6 @@ def page_archive():
     if search:
         filtered = [t for t in filtered if search.lower() in t.get("title", "").lower()]
 
-    # מיון: האחרונות שהושלמו ראשונות
     filtered = sorted(filtered, key=lambda t: t.get("completed_at") or "", reverse=True)
 
     st.markdown(f"**{len(filtered)} משימות בארכיון**")
@@ -696,7 +712,6 @@ def page_archive():
 def page_settings():
     st.title("⚙️ הגדרות וסנכרון")
 
-    # סטטוס מפתח Anthropic
     st.subheader("🤖 Anthropic API (להוספה חכמה)")
     try:
         _ = st.secrets["anthropic"]["api_key"]
@@ -706,7 +721,6 @@ def page_settings():
 
     st.markdown("---")
 
-    # סטטוס Outlook
     st.subheader("🔗 סנכרון Outlook")
     try:
         outlook_configured = bool(st.secrets["outlook"].get("client_id"))
@@ -721,36 +735,14 @@ def page_settings():
 
         st.markdown("**צ'קליסט להפעלת סנכרון Outlook:**")
         st.markdown("""
-        - [ ] שליחת מייל ל-IT של המועצה (יש מייל מוכן בהודעה הקודמת)
+        - [ ] שליחת מייל ל-IT של המועצה
         - [ ] קבלת 3 הפרטים מ-IT:
           - Application (client) ID
           - Directory (tenant) ID
           - Client Secret
-        - [ ] הוספת הפרטים ל-`.streamlit/secrets.toml`:
-          ```toml
-          [outlook]
-          tenant_id = "..."
-          client_id = "..."
-          client_secret = "..."
-          ```
+        - [ ] הוספת הפרטים ב-Secrets של Streamlit Cloud
         - [ ] לחזור אליי כדי שאוסיף את שכבת הסנכרון
         """)
-
-        with st.expander("📖 מה IT צריך לעשות בצד שלהם"):
-            st.markdown("""
-            1. כניסה ל-[Azure Portal](https://portal.azure.com) → **Azure Active Directory** → **App registrations**
-            2. **New registration**:
-               - Name: Personal Task Manager
-               - Supported account types: Single tenant
-               - Redirect URI: ללא (Device Code Flow)
-            3. תחת **API permissions** (delegated):
-               - Microsoft Graph → `Tasks.Read`
-               - Microsoft Graph → `Mail.Read`
-               - Microsoft Graph → `offline_access`
-            4. **Grant admin consent** עבור ההרשאות
-            5. תחת **Certificates & secrets** → **New client secret**
-            6. שליחה אלייך של 3 הערכים (Client ID, Tenant ID, Secret value)
-            """)
 
     st.markdown("---")
     st.subheader("📊 מצב מערכת")

@@ -40,5 +40,19 @@
     "created_at": "2026-06-22T08:23:44.621027",
     "updated_at": "2026-06-22T08:23:44.621027",
     "source": "manual"
+  },
+  {
+    "id": "d6044b3d-3139-4216-8b74-66e34c078678",
+    "title": "בדיקה",
+    "description": "בדיקה2",
+    "category": "moked",
+    "owner": "riki",
+    "priority": "urgent",
+    "due_date": "2026-06-24",
+    "archived": false,
+    "completed_at": null,
+    "created_at": "2026-06-22T09:32:47.247542",
+    "updated_at": "2026-06-22T09:32:47.247542",
+    "source": "manual"
   }
 ]

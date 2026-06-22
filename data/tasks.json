@@ -12,5 +12,19 @@
     "created_at": "2026-06-22T08:22:53.570883",
     "updated_at": "2026-06-22T08:22:53.570883",
     "source": "manual"
+  },
+  {
+    "id": "252bc9c7-41ad-4652-9b17-d13cb72f9ecd",
+    "title": "בדיקה",
+    "description": "בדיקה",
+    "category": "council_site",
+    "owner": "self",
+    "priority": "low",
+    "due_date": "2026-06-24",
+    "archived": false,
+    "completed_at": null,
+    "created_at": "2026-06-22T08:23:23.915669",
+    "updated_at": "2026-06-22T08:23:23.915669",
+    "source": "manual"
   }
 ]

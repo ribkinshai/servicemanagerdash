@@ -17,6 +17,7 @@ from models import (
     OWNERS, OWNER_LABELS,
     PRIORITIES, PRIORITY_LABELS, PRIORITY_ICONS, PRIORITY_COLORS, PRIORITY_WEIGHTS,
     DUE_SOON_DAYS,
+    new_call,
 )
 from storage import GitHubStorage
 from ai_classifier import classify_text
@@ -87,6 +88,21 @@ st.markdown("""
     .task-card.priority-high { border-right-color: #d68563; }
     .task-card.priority-medium { border-right-color: #c89f5f; }
     .task-card.priority-low { border-right-color: #84a59d; }
+
+    /* === כרטיסי שיחות (ירוק זית) === */
+    .call-card {
+        background: #ffffff;
+        border: 0.5px solid #e8dfd1;
+        border-right: 4px solid #84a59d;
+        border-radius: 12px;
+        padding: 14px 18px;
+        margin-bottom: 10px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .call-card:hover {
+        transform: translateX(-2px);
+        box-shadow: 0 2px 8px rgba(61, 47, 36, 0.06);
+    }
 
     .task-title {
         font-size: 1.05em;
@@ -282,6 +298,56 @@ def navigate_to(page_id):
 
 
 # ============================================================
+# יומן שיחות - אחסון ופעולות
+# ============================================================
+@st.cache_resource
+def get_calls_storage():
+    try:
+        return GitHubStorage(
+            token=st.secrets["github"]["token"],
+            repo_name=st.secrets["github"]["repo"],
+            file_path="data/calls.json",
+            branch=st.secrets["github"].get("branch", "main"),
+        )
+    except KeyError:
+        st.error("⚠️ חסרים פרטי גישה ל-GitHub")
+        st.stop()
+
+
+def load_calls():
+    if "calls" not in st.session_state:
+        with st.spinner("טוען יומן שיחות..."):
+            st.session_state.calls = get_calls_storage().load()
+    return st.session_state.calls
+
+
+def save_calls(commit_message: str = "Update calls"):
+    try:
+        get_calls_storage().save(st.session_state.calls, commit_message)
+    except Exception as e:
+        st.error(f"שגיאה בשמירת יומן שיחות: {e}")
+
+
+def add_call_action(**kwargs):
+    call = new_call(**kwargs)
+    st.session_state.calls.append(call)
+    save_calls(f"Log call with {call['contact_name']}")
+
+
+def delete_call_action(call_id):
+    name = next((c["contact_name"] for c in st.session_state.calls if c["id"] == call_id), "")
+    st.session_state.calls = [c for c in st.session_state.calls if c["id"] != call_id]
+    save_calls(f"Delete call log: {name}")
+
+
+def get_calls(category=None):
+    calls = list(st.session_state.calls)
+    if category:
+        calls = [c for c in calls if c.get("category") == category]
+    return sorted(calls, key=lambda c: (c.get("date") or "", c.get("created_at") or ""), reverse=True)
+
+
+# ============================================================
 # רכיבי UI
 # ============================================================
 def render_due_badge(task):
@@ -467,18 +533,90 @@ def render_task_list(tasks, empty_message="אין משימות", context_key="")
 
 
 # ============================================================
+# רכיבי UI - יומן שיחות
+# ============================================================
+def render_add_call_form(category, key_suffix=""):
+    """טופס תיעוד שיחה חדשה."""
+    with st.expander("➕ תיעוד שיחה חדשה", expanded=False):
+        with st.form(f"add_call_{category}_{key_suffix}", clear_on_submit=True):
+            c1, c2 = st.columns(2)
+            with c1:
+                contact_name = st.text_input("עם מי דיברת *", placeholder="שם איש הקשר")
+            with c2:
+                call_date = st.date_input("תאריך השיחה *", value=date.today(), format="DD/MM/YYYY")
+
+            topic = st.text_input("נושא השיחה *", placeholder="במשפט אחד - על מה דיברנו")
+            notes = st.text_area("פירוט נוסף (אופציונלי)", height=100, placeholder="סיכום מפורט, החלטות, מטלות שעלו...")
+
+            if st.form_submit_button("💾 שמור שיחה", type="primary", use_container_width=True):
+                if not contact_name.strip() or not topic.strip():
+                    st.error("חובה למלא שם איש קשר ונושא השיחה")
+                else:
+                    add_call_action(
+                        category=category,
+                        contact_name=contact_name,
+                        call_date=call_date,
+                        topic=topic,
+                        notes=notes,
+                    )
+                    st.toast("✅ השיחה תועדה", icon="📞")
+                    st.rerun()
+
+
+def render_call_log(category):
+    """תצוגת יומן השיחות לקטגוריה - טופס הוספה + רשימת שיחות."""
+    render_add_call_form(category)
+
+    calls = get_calls(category=category)
+    if not calls:
+        st.info("אין שיחות מתועדות עדיין בקטגוריה זו")
+        return
+
+    st.markdown(f"**{len(calls)} שיחות מתועדות**")
+
+    for call in calls:
+        cols = st.columns([0.7, 0.2, 0.1])
+        with cols[0]:
+            contact = call.get("contact_name", "")
+            topic = call.get("topic", "")
+            notes_html = ""
+            if call.get("notes"):
+                notes_html = f'<div class="task-meta">📝 {call["notes"]}</div>'
+            card_html = (
+                f'<div class="call-card" style="margin:0;">'
+                f'<div class="task-title">📞 {contact}</div>'
+                f'<div class="task-meta">{topic}</div>'
+                f'{notes_html}'
+                f'</div>'
+            )
+            st.markdown(card_html, unsafe_allow_html=True)
+        with cols[1]:
+            st.markdown(
+                f'<span class="due-badge-ok">📅 {call.get("date", "")}</span>',
+                unsafe_allow_html=True,
+            )
+        with cols[2]:
+            if st.button("🗑️", key=f"del_call_{call['id']}", help="מחק שיחה"):
+                delete_call_action(call["id"])
+                st.rerun()
+
+
+# ============================================================
 # סרגל צד + ניווט
 # ============================================================
 load_tasks()
+load_calls()
 
 st.sidebar.markdown("# 📋 ניהול משימות")
 st.sidebar.markdown("---")
 
 PAGES = {
     "dashboard": "📊 דשבורד",
-    "moked": f"🏢 {CATEGORY_LABELS['moked']}",
-    "council_site": f"🌐 {CATEGORY_LABELS['council_site']}",
     "crm": f"💼 {CATEGORY_LABELS['crm']}",
+    "council_site": f"🌐 {CATEGORY_LABELS['council_site']}",
+    "service_processes": f"🔄 {CATEGORY_LABELS['service_processes']}",
+    "moked": f"📞 {CATEGORY_LABELS['moked']}",
+    "routine": f"📋 {CATEGORY_LABELS['routine']}",
     "smart_add": "🤖 הוספה חכמה",
     "archive": "🗄️ ארכיון",
     "settings": "⚙️ הגדרות וסנכרון",
@@ -529,16 +667,44 @@ def page_dashboard():
         unsafe_allow_html=True
     )
 
-    # התראות בולטות בראש הדף
+    # === קטגוריות בראש הדף - לחיצה מנווטת לעמוד הפרויקט ===
+    st.subheader("📂 הפרויקטים שלי")
+    st.caption("💡 לחיצה על כפתור מובילה ישירות לעמוד הפרויקט")
+    cat_cols = st.columns(len(CATEGORIES))
+    for col, cat in zip(cat_cols, CATEGORIES):
+        with col:
+            cat_tasks = [t for t in active_tasks if t.get("category") == cat]
+            cat_overdue = [t for t in cat_tasks if is_overdue(t)]
+            cat_soon = [t for t in cat_tasks if is_due_soon(t)]
+
+            st.markdown(f"#### {CATEGORY_ICONS[cat]} {CATEGORY_LABELS[cat]}")
+
+            badges = ""
+            if cat_overdue:
+                badges += f"  ·  🔴 {len(cat_overdue)} באיחור"
+            if cat_soon:
+                badges += f"  ·  🟡 {len(cat_soon)} בקרוב"
+
+            st.button(
+                f"📋 {len(cat_tasks)} פעילות{badges}",
+                key=f"dash_nav_{cat}",
+                use_container_width=True,
+                on_click=navigate_to,
+                args=(cat,),
+                type="primary" if cat_overdue else "secondary",
+            )
+
+    st.markdown("---")
+
+    # === התראות בולטות ===
     if overdue:
         st.error(f"### 🔴 {len(overdue)} משימות באיחור — דרושה תשומת לב מיידית")
     if due_soon:
         st.warning(f"### 🟡 {len(due_soon)} משימות עם דד-ליין ביומיים הקרובים")
 
-    # מטריקות
+    # === מטריקות ===
     total = len(active_tasks)
     completed = len([t for t in st.session_state.tasks if t.get("archived")])
-    by_cat = {c: len([t for t in active_tasks if t.get("category") == c]) for c in CATEGORIES}
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("משימות פעילות", total)
@@ -548,7 +714,7 @@ def page_dashboard():
 
     st.markdown("---")
 
-    # שורה: משימות באיחור (אדום) + משימות לסיום בקרוב
+    # === משימות באיחור + בקרוב ===
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("🔴 משימות באיחור")
@@ -559,7 +725,7 @@ def page_dashboard():
 
     st.markdown("---")
 
-    # פתוחות לפי דחיפות
+    # === פתוחות לפי דחיפות ===
     st.subheader("📋 משימות פתוחות לפי דחיפות")
     for prio in ["urgent", "high", "medium", "low"]:
         prio_tasks = [t for t in active_tasks if t.get("priority") == prio]
@@ -569,37 +735,6 @@ def page_dashboard():
                 expanded=(prio in ["urgent", "high"]),
             ):
                 render_task_list(prio_tasks, context_key=f"prio_{prio}")
-
-    st.markdown("---")
-
-    # סיכום לפי קטגוריה - לחיצה מנווטת לעמוד הקטגוריה
-    st.subheader("📂 חלוקה לפי קטגוריה")
-    st.caption("💡 לחיצה על כפתור מובילה ישירות לעמוד הקטגוריה")
-    cat_cols = st.columns(len(CATEGORIES))
-    for col, cat in zip(cat_cols, CATEGORIES):
-        with col:
-            cat_tasks = [t for t in active_tasks if t.get("category") == cat]
-            cat_overdue = [t for t in cat_tasks if is_overdue(t)]
-            cat_soon = [t for t in cat_tasks if is_due_soon(t)]
-
-            # כותרת
-            st.markdown(f"### {CATEGORY_ICONS[cat]} {CATEGORY_LABELS[cat]}")
-
-            # כפתור עם מספר המשימות - לחיצה מנווטת לקטגוריה
-            badges = ""
-            if cat_overdue:
-                badges += f"  ·  🔴 {len(cat_overdue)} באיחור"
-            if cat_soon:
-                badges += f"  ·  🟡 {len(cat_soon)} בקרוב"
-
-            st.button(
-                f"📋 {len(cat_tasks)} משימות פעילות{badges}",
-                key=f"dash_nav_{cat}",
-                use_container_width=True,
-                on_click=navigate_to,
-                args=(cat,),
-                type="primary" if cat_overdue else "secondary",
-            )
 
 
 # ============================================================
@@ -611,8 +746,12 @@ def page_category(cat_key, show_riki=False):
     st.title(f"{icon} {label}")
 
     if show_riki:
-        # מוקד עם שתי טבלאות: שלי + של ריקי
-        tab_mine, tab_riki = st.tabs(["👤 המשימות שלי", "👥 המשימות של ריקי"])
+        # מוקד 106: שלוש לשוניות - שלי / ריקי / יומן שיחות
+        tab_mine, tab_riki, tab_calls = st.tabs([
+            "👤 המשימות שלי",
+            "👥 המשימות של ריקי",
+            "📞 יומן שיחות",
+        ])
 
         with tab_mine:
             my_tasks = get_tasks(category=cat_key, owner="self")
@@ -625,12 +764,21 @@ def page_category(cat_key, show_riki=False):
             render_add_form(cat_key, default_owner="riki", show_owner=False, key_suffix="riki")
             st.markdown(f"**{len(riki_tasks)} משימות פעילות**")
             render_task_list(riki_tasks, empty_message="אין משימות פעילות של ריקי", context_key=f"{cat_key}_riki")
+
+        with tab_calls:
+            render_call_log(cat_key)
     else:
-        # עמוד קטגוריה רגיל
-        tasks = get_tasks(category=cat_key)
-        render_add_form(cat_key, default_owner="self", show_owner=False)
-        st.markdown(f"**{len(tasks)} משימות פעילות**")
-        render_task_list(tasks, empty_message="אין משימות פעילות בקטגוריה זו", context_key=cat_key)
+        # שאר הפרויקטים: שתי לשוניות - משימות / יומן שיחות
+        tab_tasks, tab_calls = st.tabs(["📋 משימות", "📞 יומן שיחות"])
+
+        with tab_tasks:
+            tasks = get_tasks(category=cat_key)
+            render_add_form(cat_key, default_owner="self", show_owner=False)
+            st.markdown(f"**{len(tasks)} משימות פעילות**")
+            render_task_list(tasks, empty_message="אין משימות פעילות בקטגוריה זו", context_key=cat_key)
+
+        with tab_calls:
+            render_call_log(cat_key)
 
 
 # ============================================================
@@ -934,6 +1082,10 @@ elif page == "council_site":
     page_category("council_site")
 elif page == "crm":
     page_category("crm")
+elif page == "service_processes":
+    page_category("service_processes")
+elif page == "routine":
+    page_category("routine")
 elif page == "smart_add":
     page_smart_add()
 elif page == "archive":

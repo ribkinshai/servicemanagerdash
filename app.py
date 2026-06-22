@@ -43,7 +43,7 @@ st.markdown("""
     .stTextInput input, .stTextArea textarea, .stSelectbox div, .stDateInput input {
         text-align: right;
     }
-    .stApp, .stMarkdown, button, h1, h2, h3, h4, h5 {
+    html, body, .stApp, [class*="st-"], .stMarkdown, button {
         font-family: 'Rubik', -apple-system, BlinkMacSystemFont, sans-serif !important;
     }
 
@@ -475,15 +475,7 @@ st.sidebar.markdown("# 📋 ניהול משימות")
 st.sidebar.markdown("---")
 
 PAGES = {
-    st.markdown(
-        '<div style="text-align:center; padding:28px 0 18px; margin-bottom:24px; border-bottom:1px solid #e8dfd1;">'
-        '<h1 style="color:#3d2f24; font-size:2.4em; font-weight:600; margin:0; letter-spacing:-0.02em;">'
-        '📋 ניהול משימות מחלקת שירות'
-        '</h1>'
-        '<p style="color:#8a7a6c; font-size:0.95em; margin:10px 0 0 0;">דשבורד מרכזי</p>'
-        '</div>',
-        unsafe_allow_html=True
-    )
+    "dashboard": "📊 דשבורד",
     "moked": f"🏢 {CATEGORY_LABELS['moked']}",
     "council_site": f"🌐 {CATEGORY_LABELS['council_site']}",
     "crm": f"💼 {CATEGORY_LABELS['crm']}",
@@ -527,7 +519,15 @@ if st.sidebar.button("🔄 רענן מ-GitHub", use_container_width=True):
 # 📊 דשבורד
 # ============================================================
 def page_dashboard():
-    st.title("📊 דשבורד")
+    st.markdown(
+        '<div style="text-align:center; padding:28px 0 18px; margin-bottom:24px; border-bottom:1px solid #e8dfd1;">'
+        '<h1 style="color:#3d2f24; font-size:2.4em; font-weight:600; margin:0; letter-spacing:-0.02em;">'
+        '📋 ניהול משימות מחלקת שירות'
+        '</h1>'
+        '<p style="color:#8a7a6c; font-size:0.95em; margin:10px 0 0 0;">דשבורד מרכזי</p>'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
     # התראות בולטות בראש הדף
     if overdue:

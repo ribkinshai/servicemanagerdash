@@ -33,52 +33,169 @@ st.set_page_config(
 )
 
 st.markdown("""
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
-    /* RTL לכל האפליקציה */
+    /* === RTL וגופן === */
     .stApp, section[data-testid="stSidebar"] { direction: rtl; }
     .stTextInput input, .stTextArea textarea, .stSelectbox div, .stDateInput input {
         text-align: right;
     }
-    /* כרטיסי משימות */
+    html, body, .stApp, [class*="st-"], .stMarkdown, button {
+        font-family: 'Rubik', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    }
+
+    /* === רקעים בגוון קרם === */
+    .stApp { background-color: #faf6f0; }
+    section[data-testid="stSidebar"] { background-color: #f5ede0; }
+    section[data-testid="stSidebar"] > div:first-child {
+        background-color: #f5ede0;
+    }
+
+    /* === כותרות בחום עמוק === */
+    h1, h2, h3, h4, h5 {
+        color: #3d2f24 !important;
+        font-family: 'Rubik', sans-serif !important;
+        font-weight: 600 !important;
+    }
+
+    /* === כרטיסי משימות === */
     .task-card {
         background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-right: 5px solid #94a3b8;
-        border-radius: 8px;
+        border: 0.5px solid #e8dfd1;
+        border-right: 4px solid #b3a899;
+        border-radius: 12px;
         padding: 14px 18px;
         margin-bottom: 10px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .task-card:hover {
+        transform: translateX(-2px);
+        box-shadow: 0 2px 8px rgba(61, 47, 36, 0.06);
     }
     .task-card.overdue {
-        background: #fef2f2;
-        border-right-color: #dc2626;
+        background: #fdf0e8;
+        border-right-color: #b54a30;
     }
     .task-card.due-soon {
-        background: #fffbeb;
-        border-right-color: #f59e0b;
+        background: #fdf5e8;
+        border-right-color: #d6a35c;
     }
-    .task-card.priority-urgent { border-right-color: #dc2626; }
-    .task-card.priority-high { border-right-color: #ea580c; }
-    .task-card.priority-medium { border-right-color: #ca8a04; }
-    .task-card.priority-low { border-right-color: #16a34a; }
-    .task-title { font-size: 1.05em; font-weight: 600; color: #0f172a; }
-    .task-meta { font-size: 0.85em; color: #64748b; margin-top: 4px; }
+    .task-card.priority-urgent { border-right-color: #b54a30; }
+    .task-card.priority-high { border-right-color: #d68563; }
+    .task-card.priority-medium { border-right-color: #c89f5f; }
+    .task-card.priority-low { border-right-color: #84a59d; }
+
+    .task-title {
+        font-size: 1.05em;
+        font-weight: 600;
+        color: #3d2f24;
+    }
+    .task-meta {
+        font-size: 0.85em;
+        color: #8a7a6c;
+        margin-top: 4px;
+    }
+
+    /* === תגיות תאריך - בצורת גלולה === */
     .due-badge-overdue {
-        background: #dc2626; color: white; padding: 2px 8px;
-        border-radius: 4px; font-size: 0.8em; font-weight: 600;
+        background: #b54a30;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 14px;
+        font-size: 0.8em;
+        font-weight: 500;
+        display: inline-block;
     }
     .due-badge-soon {
-        background: #f59e0b; color: white; padding: 2px 8px;
-        border-radius: 4px; font-size: 0.8em; font-weight: 600;
+        background: #d6a35c;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 14px;
+        font-size: 0.8em;
+        font-weight: 500;
+        display: inline-block;
     }
     .due-badge-ok {
-        background: #e2e8f0; color: #475569; padding: 2px 8px;
-        border-radius: 4px; font-size: 0.8em;
+        background: #ebe2d1;
+        color: #6b5a48;
+        padding: 4px 12px;
+        border-radius: 14px;
+        font-size: 0.8em;
+        display: inline-block;
     }
-    /* כותרות עמוד */
-    h1, h2, h3 { color: #0f172a; }
-    /* הסתרת הפוטר של Streamlit */
+
+    /* === מטריקות (מספרים בדשבורד) === */
+    [data-testid="stMetricValue"] {
+        color: #d68563 !important;
+        font-weight: 600 !important;
+    }
+    [data-testid="stMetricLabel"] {
+        color: #8a7a6c !important;
+        font-weight: 500 !important;
+    }
+    [data-testid="stMetric"] {
+        background: white;
+        border: 0.5px solid #e8dfd1;
+        border-radius: 10px;
+        padding: 12px 16px;
+    }
+
+    /* === כפתורים === */
+    .stButton button {
+        border-radius: 10px !important;
+        font-weight: 500 !important;
+        transition: all 0.15s ease;
+    }
+    .stButton button[kind="primary"] {
+        background-color: #d68563 !important;
+        color: white !important;
+        border: none !important;
+    }
+    .stButton button[kind="primary"]:hover {
+        background-color: #c0704d !important;
+        transform: translateY(-1px);
+    }
+    .stButton button[kind="secondary"] {
+        background-color: white !important;
+        color: #3d2f24 !important;
+        border: 1px solid #e8dfd1 !important;
+    }
+    .stButton button[kind="secondary"]:hover {
+        background-color: #f5ede0 !important;
+        border-color: #d68563 !important;
+        color: #3d2f24 !important;
+    }
+
+    /* === שדות קלט === */
+    .stTextInput input, .stTextArea textarea,
+    .stSelectbox div[data-baseweb="select"], .stDateInput input {
+        border-radius: 8px !important;
+        border-color: #e8dfd1 !important;
+    }
+    .stTextInput input:focus, .stTextArea textarea:focus {
+        border-color: #d68563 !important;
+        box-shadow: 0 0 0 2px rgba(214, 133, 99, 0.15) !important;
+    }
+
+    /* === Expander === */
+    .streamlit-expanderHeader {
+        background-color: white !important;
+        border: 0.5px solid #e8dfd1 !important;
+        border-radius: 10px !important;
+        color: #3d2f24 !important;
+    }
+
+    /* === רדיו וצ'קבוקס === */
+    .stRadio label, .stCheckbox label {
+        color: #3d2f24 !important;
+    }
+
+    /* === הסתרת פוטר === */
     footer { visibility: hidden; }
+    #MainMenu { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -183,7 +300,7 @@ def render_due_badge(task):
 
 def render_task_row(task, show_complete=True, show_restore=False, context_key=""):
     """שורת משימה אחת - צ'קבוקס, כותרת, badges, כפתורי עריכה/מחיקה.
-
+    
     context_key מאפשר רינדור של אותה משימה במספר מקומות בלי התנגשות widget keys.
     """
     css_class = "task-card"
@@ -308,7 +425,7 @@ def render_add_form(category, default_owner="self", show_owner=False, key_suffix
                 priority = st.selectbox(
                     "רמת דחיפות",
                     PRIORITIES,
-                    index=1,
+                    index=1,  # default: medium
                     format_func=lambda p: f"{PRIORITY_ICONS[p]} {PRIORITY_LABELS[p]}",
                 )
             with c2:
@@ -413,6 +530,7 @@ def page_dashboard():
     # מטריקות
     total = len(active_tasks)
     completed = len([t for t in st.session_state.tasks if t.get("archived")])
+    by_cat = {c: len([t for t in active_tasks if t.get("category") == c]) for c in CATEGORIES}
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("משימות פעילות", total)
@@ -485,6 +603,7 @@ def page_category(cat_key, show_riki=False):
     st.title(f"{icon} {label}")
 
     if show_riki:
+        # מוקד עם שתי טבלאות: שלי + של ריקי
         tab_mine, tab_riki = st.tabs(["👤 המשימות שלי", "👥 המשימות של ריקי"])
 
         with tab_mine:
@@ -499,6 +618,7 @@ def page_category(cat_key, show_riki=False):
             st.markdown(f"**{len(riki_tasks)} משימות פעילות**")
             render_task_list(riki_tasks, empty_message="אין משימות פעילות של ריקי", context_key=f"{cat_key}_riki")
     else:
+        # עמוד קטגוריה רגיל
         tasks = get_tasks(category=cat_key)
         render_add_form(cat_key, default_owner="self", show_owner=False)
         st.markdown(f"**{len(tasks)} משימות פעילות**")
@@ -515,6 +635,7 @@ def page_smart_add():
         "Claude יקרא, יסווג לקטגוריה, יחלץ דד-ליין ודחיפות, ויציע משימה לאישור שלך."
     )
 
+    # בדיקת מפתח API
     try:
         api_key = st.secrets["anthropic"]["api_key"]
     except (KeyError, FileNotFoundError):
@@ -522,11 +643,12 @@ def page_smart_add():
             "⚠️ לא הוגדר Anthropic API key. כדי להפעיל את הסיווג החכם:\n"
             "1. הירשמי ב-https://console.anthropic.com\n"
             "2. צרי API key\n"
-            "3. הוסיפי ב-Secrets:\n"
+            "3. הוסיפי ב-`.streamlit/secrets.toml`:\n"
             "```toml\n[anthropic]\napi_key = \"sk-ant-...\"\n```"
         )
         return
 
+    # תיבת הקלט
     text = st.text_area(
         "טקסט לסיווג",
         height=200,
@@ -557,11 +679,13 @@ def page_smart_add():
                 st.error(f"שגיאה בסיווג: {e}")
                 return
 
+    # הצגת הצעת Claude לאישור
     if "ai_suggestion" in st.session_state:
         sug = st.session_state.ai_suggestion
         st.markdown("---")
         st.subheader("📋 הצעת Claude")
 
+        # ציון ביטחון
         confidence = sug.get("confidence", 0.0)
         if confidence >= 0.8:
             st.success(f"רמת ביטחון: {int(confidence*100)}% ✅")
@@ -573,6 +697,7 @@ def page_smart_add():
         if sug.get("reasoning"):
             st.caption(f"💭 {sug['reasoning']}")
 
+        # טופס אישור/עריכה
         with st.form("confirm_ai_suggestion"):
             title = st.text_input("כותרת", value=sug.get("suggested_title", ""))
 
@@ -602,6 +727,7 @@ def page_smart_add():
                         pass
                 due_date = st.date_input("תאריך יעד", value=suggested_due, format="DD/MM/YYYY")
             with c4:
+                # בעלים רק אם הקטגוריה היא מוקד
                 if category == "moked":
                     owner = st.radio(
                         "משימה של:",
@@ -657,6 +783,7 @@ def page_archive():
         st.info("הארכיון ריק. משימות שתסמני כהושלמו יופיעו כאן.")
         return
 
+    # פילטרים
     c1, c2 = st.columns([0.3, 0.7])
     with c1:
         cat_filter = st.selectbox(
@@ -673,6 +800,7 @@ def page_archive():
     if search:
         filtered = [t for t in filtered if search.lower() in t.get("title", "").lower()]
 
+    # מיון: האחרונות שהושלמו ראשונות
     filtered = sorted(filtered, key=lambda t: t.get("completed_at") or "", reverse=True)
 
     st.markdown(f"**{len(filtered)} משימות בארכיון**")
@@ -712,6 +840,7 @@ def page_archive():
 def page_settings():
     st.title("⚙️ הגדרות וסנכרון")
 
+    # סטטוס מפתח Anthropic
     st.subheader("🤖 Anthropic API (להוספה חכמה)")
     try:
         _ = st.secrets["anthropic"]["api_key"]
@@ -721,6 +850,7 @@ def page_settings():
 
     st.markdown("---")
 
+    # סטטוס Outlook
     st.subheader("🔗 סנכרון Outlook")
     try:
         outlook_configured = bool(st.secrets["outlook"].get("client_id"))
@@ -735,14 +865,36 @@ def page_settings():
 
         st.markdown("**צ'קליסט להפעלת סנכרון Outlook:**")
         st.markdown("""
-        - [ ] שליחת מייל ל-IT של המועצה
+        - [ ] שליחת מייל ל-IT של המועצה (יש מייל מוכן בהודעה הקודמת)
         - [ ] קבלת 3 הפרטים מ-IT:
           - Application (client) ID
           - Directory (tenant) ID
           - Client Secret
-        - [ ] הוספת הפרטים ב-Secrets של Streamlit Cloud
+        - [ ] הוספת הפרטים ל-`.streamlit/secrets.toml`:
+          ```toml
+          [outlook]
+          tenant_id = "..."
+          client_id = "..."
+          client_secret = "..."
+          ```
         - [ ] לחזור אליי כדי שאוסיף את שכבת הסנכרון
         """)
+
+        with st.expander("📖 מה IT צריך לעשות בצד שלהם"):
+            st.markdown("""
+            1. כניסה ל-[Azure Portal](https://portal.azure.com) → **Azure Active Directory** → **App registrations**
+            2. **New registration**:
+               - Name: Personal Task Manager
+               - Supported account types: Single tenant
+               - Redirect URI: ללא (Device Code Flow)
+            3. תחת **API permissions** (delegated):
+               - Microsoft Graph → `Tasks.Read`
+               - Microsoft Graph → `Mail.Read`
+               - Microsoft Graph → `offline_access`
+            4. **Grant admin consent** עבור ההרשאות
+            5. תחת **Certificates & secrets** → **New client secret**
+            6. שליחה אלייך של 3 הערכים (Client ID, Tenant ID, Secret value)
+            """)
 
     st.markdown("---")
     st.subheader("📊 מצב מערכת")

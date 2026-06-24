@@ -700,9 +700,9 @@ def page_dashboard():
 
             badges = ""
             if cat_overdue:
-                badges += f"  ·  🔴 {len(cat_overdue)} באיחור"
+                badges += f"  ·  🔴{len(cat_overdue)}"
             if cat_soon:
-                badges += f"  ·  🟡 {len(cat_soon)} בקרוב"
+                badges += f"  ·  🟡{len(cat_soon)}"
 
             st.button(
                 f"📋 {len(cat_tasks)} פעילות{badges}",

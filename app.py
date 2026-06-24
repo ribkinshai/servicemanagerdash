@@ -210,14 +210,23 @@ st.markdown("""
     }
 
     /* === ביישור גובה כרטיסי דשבורד === */
-    [data-testid="column"] .stButton > button {
-        min-height: 56px;
+    [data-testid="column"] .stButton > button,
+    [data-testid="stColumn"] .stButton > button {
+        min-height: 78px !important;
         white-space: normal !important;
-        line-height: 1.3;
+        line-height: 1.3 !important;
+        padding: 10px 14px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
     }
-    [data-testid="column"] h4 {
-        min-height: 48px;
-        margin-bottom: 8px;
+    [data-testid="column"] h4,
+    [data-testid="stColumn"] h4 {
+        min-height: 60px !important;
+        margin-bottom: 8px !important;
+        display: flex !important;
+        align-items: flex-end !important;
     }
 
     /* === הסתרת פוטר === */

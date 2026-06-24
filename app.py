@@ -709,7 +709,12 @@ def page_dashboard():
             cat_soon = [t for t in cat_tasks if is_due_soon(t)]
 
             st.markdown(f"#### {CATEGORY_ICONS[cat]} {CATEGORY_LABELS[cat]}")
-
+            
+            badges = ""
+            if cat_overdue:
+                badges += f"  ·  🔴 {len(cat_overdue)} באיחור"
+            if cat_soon:
+                badges += f"  ·  🟡 {len(cat_soon)} בקרוב"
             st.button(
                 f"📋 {len(cat_tasks)} פעילות{badges}",
                 key=f"dash_nav_{cat}",

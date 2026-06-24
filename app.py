@@ -44,7 +44,7 @@ st.markdown("""
     .stTextInput input, .stTextArea textarea, .stSelectbox div, .stDateInput input {
         text-align: right;
     }
-    html, body, .stApp, [class*="st-"], .stMarkdown, button {
+    .stApp, .stMarkdown, button, h1, h2, h3, h4, h5 {
         font-family: 'Rubik', -apple-system, BlinkMacSystemFont, sans-serif !important;
     }
 
@@ -207,6 +207,17 @@ st.markdown("""
     /* === רדיו וצ'קבוקס === */
     .stRadio label, .stCheckbox label {
         color: #3d2f24 !important;
+    }
+
+    /* === ביישור גובה כרטיסי דשבורד === */
+    [data-testid="column"] .stButton > button {
+        min-height: 56px;
+        white-space: normal !important;
+        line-height: 1.3;
+    }
+    [data-testid="column"] h4 {
+        min-height: 48px;
+        margin-bottom: 8px;
     }
 
     /* === הסתרת פוטר === */
@@ -668,7 +679,6 @@ def page_dashboard():
     )
 
     # === קטגוריות בראש הדף - לחיצה מנווטת לעמוד הפרויקט ===
-    st.subheader("📂 הפרויקטים שלי")
     st.caption("💡 לחיצה על כפתור מובילה ישירות לעמוד הפרויקט")
     cat_cols = st.columns(len(CATEGORIES))
     for col, cat in zip(cat_cols, CATEGORIES):
@@ -707,10 +717,39 @@ def page_dashboard():
     completed = len([t for t in st.session_state.tasks if t.get("archived")])
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("משימות פעילות", total)
-    c2.metric("הושלמו", completed)
-    c3.metric("באיחור", len(overdue), delta=None if not overdue else "דרוש טיפול", delta_color="inverse")
-    c4.metric("בקרוב (יומיים)", len(due_soon))
+    with c1:
+        st.button(
+            f"📋 {total} משימות פעילות",
+            key="metric_active",
+            use_container_width=True,
+            on_click=navigate_to,
+            args=("all_active",),
+        )
+    with c2:
+        st.button(
+            f"✅ {completed} הושלמו",
+            key="metric_completed",
+            use_container_width=True,
+            on_click=navigate_to,
+            args=("archive",),
+        )
+    with c3:
+        st.button(
+            f"🔴 {len(overdue)} באיחור",
+            key="metric_overdue",
+            use_container_width=True,
+            on_click=navigate_to,
+            args=("overdue_view",),
+            type="primary" if overdue else "secondary",
+        )
+    with c4:
+        st.button(
+            f"🟡 {len(due_soon)} בקרוב (יומיים)",
+            key="metric_soon",
+            use_container_width=True,
+            on_click=navigate_to,
+            args=("due_soon_view",),
+        )
 
     st.markdown("---")
 
@@ -927,7 +966,46 @@ def page_smart_add():
                     del st.session_state.ai_suggestion
                     st.rerun()
 
+# ============================================================
+# רשימות מסוננות (נכנסים מהדשבורד דרך הקוביות)
+# ============================================================
+def page_all_active():
+    st.title("📋 כל המשימות הפעילות")
+    tasks = sorted(
+        [t for t in st.session_state.tasks if not t.get("archived")],
+        key=sort_key,
+    )
+    if not tasks:
+        st.info("אין משימות פעילות")
+        return
+    st.markdown(f"**{len(tasks)} משימות**")
+    render_task_list(tasks, context_key="all_active")
 
+
+def page_overdue_view():
+    st.title("🔴 משימות באיחור")
+    tasks = sorted(
+        [t for t in st.session_state.tasks if not t.get("archived") and is_overdue(t)],
+        key=sort_key,
+    )
+    if not tasks:
+        st.success("🎉 אין משימות באיחור")
+        return
+    st.markdown(f"**{len(tasks)} משימות באיחור**")
+    render_task_list(tasks, context_key="overdue_view")
+
+
+def page_due_soon_view():
+    st.title("🟡 משימות לסיום בקרוב")
+    tasks = sorted(
+        [t for t in st.session_state.tasks if not t.get("archived") and is_due_soon(t)],
+        key=sort_key,
+    )
+    if not tasks:
+        st.info("אין משימות לסיום בקרוב")
+        return
+    st.markdown(f"**{len(tasks)} משימות**")
+    render_task_list(tasks, context_key="due_soon_view")
 # ============================================================
 # 🗄️ ארכיון
 # ============================================================
@@ -1088,6 +1166,12 @@ elif page == "routine":
     page_category("routine")
 elif page == "smart_add":
     page_smart_add()
+elif page == "all_active":
+    page_all_active()
+elif page == "overdue_view":
+    page_overdue_view()
+elif page == "due_soon_view":
+    page_due_soon_view()
 elif page == "archive":
     page_archive()
 elif page == "settings":

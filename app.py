@@ -212,14 +212,26 @@ st.markdown("""
     /* === ביישור גובה כרטיסי דשבורד === */
     [data-testid="column"] .stButton > button,
     [data-testid="stColumn"] .stButton > button {
-        min-height: 78px !important;
+        height: 72px !important;
+        min-height: 72px !important;
+        max-height: 72px !important;
         white-space: normal !important;
-        line-height: 1.3 !important;
-        padding: 10px 14px !important;
+        line-height: 1.25 !important;
+        padding: 8px 12px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         text-align: center !important;
+        overflow: hidden !important;
+    }
+    [data-testid="column"] h4,
+    [data-testid="stColumn"] h4 {
+        min-height: 56px !important;
+        margin-top: 0 !important;
+        margin-bottom: 10px !important;
+        display: flex !important;
+        align-items: flex-start !important;
+        padding-top: 0 !important;
     }
     [data-testid="column"] h4,
     [data-testid="stColumn"] h4 {
@@ -699,24 +711,12 @@ def page_dashboard():
             st.markdown(f"#### {CATEGORY_ICONS[cat]} {CATEGORY_LABELS[cat]}")
 
             st.button(
-                f"📋 {len(cat_tasks)} משימות פעילות",
+                f"📋 {len(cat_tasks)} פעילות{badges}",
                 key=f"dash_nav_{cat}",
                 use_container_width=True,
                 on_click=navigate_to,
                 args=(cat,),
                 type="primary" if cat_overdue else "secondary",
-            )
-
-            # באדג'ים מתחת לכפתור - בגובה קבוע לאחידות
-            badge_parts = []
-            if cat_overdue:
-                badge_parts.append(f"🔴 {len(cat_overdue)} באיחור")
-            if cat_soon:
-                badge_parts.append(f"🟡 {len(cat_soon)} בקרוב")
-            badges_text = " · ".join(badge_parts) if badge_parts else "&nbsp;"
-            st.markdown(
-                f'<div style="text-align:center;font-size:0.85em;color:#8a7a6c;height:24px;padding-top:6px;overflow:hidden;">{badges_text}</div>',
-                unsafe_allow_html=True,
             )
 
     st.markdown("---")

@@ -698,19 +698,25 @@ def page_dashboard():
 
             st.markdown(f"#### {CATEGORY_ICONS[cat]} {CATEGORY_LABELS[cat]}")
 
-            badges = ""
-            if cat_overdue:
-                badges += f"  ·  🔴{len(cat_overdue)}"
-            if cat_soon:
-                badges += f"  ·  🟡{len(cat_soon)}"
-
             st.button(
-                f"📋 {len(cat_tasks)} פעילות{badges}",
+                f"📋 {len(cat_tasks)} משימות פעילות",
                 key=f"dash_nav_{cat}",
                 use_container_width=True,
                 on_click=navigate_to,
                 args=(cat,),
                 type="primary" if cat_overdue else "secondary",
+            )
+
+            # באדג'ים מתחת לכפתור - בגובה קבוע לאחידות
+            badge_parts = []
+            if cat_overdue:
+                badge_parts.append(f"🔴 {len(cat_overdue)} באיחור")
+            if cat_soon:
+                badge_parts.append(f"🟡 {len(cat_soon)} בקרוב")
+            badges_text = " · ".join(badge_parts) if badge_parts else "&nbsp;"
+            st.markdown(
+                f'<div style="text-align:center;font-size:0.85em;color:#8a7a6c;height:24px;padding-top:6px;overflow:hidden;">{badges_text}</div>',
+                unsafe_allow_html=True,
             )
 
     st.markdown("---")

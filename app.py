@@ -226,12 +226,14 @@ st.markdown("""
     }
     [data-testid="column"] h4,
     [data-testid="stColumn"] h4 {
-        min-height: 56px !important;
+        height: 72px !important;
+        min-height: 72px !important;
+        max-height: 72px !important;
         margin-top: 0 !important;
         margin-bottom: 10px !important;
-        display: flex !important;
-        align-items: flex-start !important;
         padding-top: 0 !important;
+        overflow: hidden !important;
+        display: block !important;
     }
     [data-testid="column"] h4,
     [data-testid="stColumn"] h4 {

@@ -691,6 +691,93 @@ if st.sidebar.button("🔄 רענן מ-GitHub", use_container_width=True):
 # 📊 דשבורד
 # ============================================================
 def page_dashboard():
+   # ============================================================
+# צבעים לכל פרויקט (סגנון Monday)
+# ============================================================
+PROJECT_COLORS = {
+    "crm":               {"bg": "#E6F1FB", "border": "#185FA5", "text": "#042C53"},
+    "council_site":      {"bg": "#E1F5EE", "border": "#1D9E75", "text": "#04342C"},
+    "service_processes": {"bg": "#EEEDFE", "border": "#534AB7", "text": "#26215C"},
+    "moked":             {"bg": "#FAECE7", "border": "#993C1D", "text": "#4A1B0C"},
+    "routine":           {"bg": "#F1EFE8", "border": "#5F5E5A", "text": "#2C2C2A"},
+}
+
+
+def render_project_chart(tasks_list):
+    """גרף עמודות - משימות פעילות לפי פרויקט."""
+    counts = {cat: len([t for t in tasks_list if t.get("category") == cat]) for cat in CATEGORIES}
+    max_count = max(counts.values()) if counts.values() else 0
+    if max_count == 0:
+        return
+
+    short_labels = {
+        "crm": "CRM",
+        "council_site": "אתר עירייה",
+        "service_processes": "תהליכי שירות",
+        "moked": "מוקד 106",
+        "routine": "משימות שוטפות",
+    }
+
+    bars_html = []
+    for cat in CATEGORIES:
+        count = counts.get(cat, 0)
+        height_pct = int((count / max_count) * 100) if max_count else 0
+        color = PROJECT_COLORS[cat]["border"]
+        bars_html.append(
+            f'<div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;">'
+            f'<div style="font-size:1em;font-weight:600;color:#3d2f24;">{count}</div>'
+            f'<div style="height:90px;width:100%;display:flex;align-items:flex-end;justify-content:center;">'
+            f'<div style="width:60%;background:{color};height:{max(height_pct, 6)}%;border-radius:4px 4px 0 0;min-height:6px;"></div>'
+            f'</div>'
+            f'<div style="font-size:0.78em;color:#8a7a6c;text-align:center;line-height:1.2;">{short_labels[cat]}</div>'
+            f'</div>'
+        )
+
+    chart_html = (
+        '<div style="background:white;border-radius:12px;padding:18px 24px;border:0.5px solid #e8dfd1;margin:20px 0;">'
+        '<div style="font-size:0.95em;color:#3d2f24;margin-bottom:16px;font-weight:500;">📊 משימות פעילות לפי פרויקט</div>'
+        '<div style="display:flex;gap:12px;align-items:stretch;">'
+        + "".join(bars_html)
+        + '</div></div>'
+    )
+    st.markdown(chart_html, unsafe_allow_html=True)
+
+
+def render_monday_board(tasks_list):
+    """לוח בסגנון Monday - משימות מקובצות לפי פרויקט עם כותרת צבעונית."""
+    st.subheader("📋 כל המשימות לפי פרויקט")
+
+    has_any = False
+    for cat in CATEGORIES:
+        cat_tasks = [t for t in tasks_list if t.get("category") == cat]
+        if not cat_tasks:
+            continue
+        has_any = True
+        colors = PROJECT_COLORS[cat]
+        cat_tasks_sorted = sorted(cat_tasks, key=sort_key)
+
+        header_html = (
+            f'<div style="background:{colors["bg"]};border-right:5px solid {colors["border"]};'
+            f'padding:12px 18px;border-radius:10px;margin-top:18px;margin-bottom:6px;'
+            f'display:flex;justify-content:space-between;align-items:center;">'
+            f'<div style="font-weight:600;color:{colors["text"]};font-size:1.05em;">'
+            f'{CATEGORY_ICONS[cat]} {CATEGORY_LABELS[cat]}'
+            f' <span style="opacity:0.65;font-weight:400;font-size:0.88em;">'
+            f'· {len(cat_tasks_sorted)} משימות</span></div></div>'
+        )
+        st.markdown(header_html, unsafe_allow_html=True)
+
+        for task in cat_tasks_sorted:
+            render_task_row(task, context_key=f"mb_{cat}")
+
+    if not has_any:
+        st.info("🎉 אין משימות פעילות כרגע - כל הכבוד!")
+
+
+# ============================================================
+# 📊 דשבורד
+# ============================================================
+def page_dashboard():
     st.markdown(
         '<div style="text-align:center; padding:28px 0 18px; margin-bottom:24px; border-bottom:1px solid #e8dfd1;">'
         '<h1 style="color:#3d2f24; font-size:2.4em; font-weight:600; margin:0; letter-spacing:-0.02em;">'
@@ -701,40 +788,13 @@ def page_dashboard():
         unsafe_allow_html=True
     )
 
-    # === קטגוריות בראש הדף - לחיצה מנווטת לעמוד הפרויקט ===
-    st.caption("💡 לחיצה על כפתור מובילה ישירות לעמוד הפרויקט")
-    cat_cols = st.columns(len(CATEGORIES))
-    for col, cat in zip(cat_cols, CATEGORIES):
-        with col:
-            cat_tasks = [t for t in active_tasks if t.get("category") == cat]
-            cat_overdue = [t for t in cat_tasks if is_overdue(t)]
-            cat_soon = [t for t in cat_tasks if is_due_soon(t)]
-
-            st.markdown(f"#### {CATEGORY_ICONS[cat]} {CATEGORY_LABELS[cat]}")
-            
-            badges = ""
-            if cat_overdue:
-                badges += f"  ·  🔴 {len(cat_overdue)}"
-            if cat_soon:
-                badges += f"  ·  🟡 {len(cat_soon)}"
-            st.button(
-                f"📋 {len(cat_tasks)} פעילות{badges}",
-                key=f"dash_nav_{cat}",
-                use_container_width=True,
-                on_click=navigate_to,
-                args=(cat,),
-                type="primary" if cat_overdue else "secondary",
-            )
-
-    st.markdown("---")
-
     # === התראות בולטות ===
     if overdue:
         st.error(f"### 🔴 {len(overdue)} משימות באיחור — דרושה תשומת לב מיידית")
     if due_soon:
         st.warning(f"### 🟡 {len(due_soon)} משימות עם דד-ליין ביומיים הקרובים")
 
-    # === מטריקות ===
+    # === קוביות סטטיסטיקה (KPI) ===
     total = len(active_tasks)
     completed = len([t for t in st.session_state.tasks if t.get("archived")])
 
@@ -773,29 +833,11 @@ def page_dashboard():
             args=("due_soon_view",),
         )
 
-    st.markdown("---")
+    # === גרף עמודות לפי פרויקט ===
+    render_project_chart(active_tasks)
 
-    # === משימות באיחור + בקרוב ===
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("🔴 משימות באיחור")
-        render_task_list(overdue, empty_message="אין משימות באיחור 🎉", context_key="overdue")
-    with col2:
-        st.subheader("🟡 לסיום ביומיים הקרובים")
-        render_task_list(due_soon, empty_message="אין משימות לסיום בקרוב", context_key="soon")
-
-    st.markdown("---")
-
-    # === פתוחות לפי דחיפות ===
-    st.subheader("📋 משימות פתוחות לפי דחיפות")
-    for prio in ["urgent", "high", "medium", "low"]:
-        prio_tasks = [t for t in active_tasks if t.get("priority") == prio]
-        if prio_tasks:
-            with st.expander(
-                f"{PRIORITY_ICONS[prio]} דחיפות {PRIORITY_LABELS[prio]} ({len(prio_tasks)})",
-                expanded=(prio in ["urgent", "high"]),
-            ):
-                render_task_list(prio_tasks, context_key=f"prio_{prio}")
+    # === לוח Monday - משימות מקובצות לפי פרויקט ===
+    render_monday_board(active_tasks)
 
 
 # ============================================================

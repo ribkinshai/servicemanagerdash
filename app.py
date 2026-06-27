@@ -48,165 +48,134 @@ st.markdown("""
         font-family: 'Rubik', -apple-system, BlinkMacSystemFont, sans-serif !important;
     }
 
-    /* === רקעים בגוון קרם === */
-    .stApp { background-color: #faf6f0; }
-    section[data-testid="stSidebar"] { background-color: #f5ede0; }
+    /* === רקעים בסגנון Monday === */
+    .stApp { background-color: #f6f7fb; }
+    section[data-testid="stSidebar"] {
+        background-color: #ffffff !important;
+        border-left: 0.5px solid #e1e5f1;
+    }
     section[data-testid="stSidebar"] > div:first-child {
-        background-color: #f5ede0;
+        background-color: #ffffff !important;
     }
 
-    /* === כותרות בחום עמוק === */
+    /* === כותרות === */
     h1, h2, h3, h4, h5 {
-        color: #3d2f24 !important;
+        color: #323338 !important;
         font-family: 'Rubik', sans-serif !important;
         font-weight: 600 !important;
+    }
+
+    /* === Sidebar - סגנון Monday === */
+    section[data-testid="stSidebar"] .stRadio > div { gap: 4px; }
+    section[data-testid="stSidebar"] .stRadio label {
+        padding: 10px 14px !important;
+        border-radius: 8px;
+        transition: background-color 0.15s ease;
+        cursor: pointer;
+        width: 100%;
+    }
+    section[data-testid="stSidebar"] .stRadio label:hover {
+        background-color: #f6f7fb;
+    }
+    section[data-testid="stSidebar"] .stRadio label:has(input:checked) {
+        background-color: #e6f1fc;
+        color: #0073ea !important;
+        font-weight: 500;
     }
 
     /* === כרטיסי משימות === */
     .task-card {
         background: #ffffff;
-        border: 0.5px solid #e8dfd1;
-        border-right: 4px solid #b3a899;
-        border-radius: 12px;
+        border: 0.5px solid #e1e5f1;
+        border-right: 5px solid #c4c4c4;
+        border-radius: 8px;
         padding: 14px 18px;
-        margin-bottom: 10px;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        margin-bottom: 8px;
+        transition: all 0.15s ease;
     }
     .task-card:hover {
+        border-color: #0073ea;
         transform: translateX(-2px);
-        box-shadow: 0 2px 8px rgba(61, 47, 36, 0.06);
+        box-shadow: 0 2px 8px rgba(0, 115, 234, 0.08);
     }
-    .task-card.overdue {
-        background: #fdf0e8;
-        border-right-color: #b54a30;
-    }
-    .task-card.due-soon {
-        background: #fdf5e8;
-        border-right-color: #d6a35c;
-    }
-    .task-card.priority-urgent { border-right-color: #b54a30; }
-    .task-card.priority-high { border-right-color: #d68563; }
-    .task-card.priority-medium { border-right-color: #c89f5f; }
-    .task-card.priority-low { border-right-color: #84a59d; }
+    .task-card.overdue { background: #fff5f5; border-right-color: #e2445c; }
+    .task-card.due-soon { background: #fffaeb; border-right-color: #fdab3d; }
+    .task-card.priority-urgent { border-right-color: #e2445c; }
+    .task-card.priority-high { border-right-color: #ff7575; }
+    .task-card.priority-medium { border-right-color: #fdab3d; }
+    .task-card.priority-low { border-right-color: #00c875; }
 
-    /* === כרטיסי שיחות (ירוק זית) === */
+    .task-title { font-size: 1.05em; font-weight: 500; color: #323338; }
+    .task-meta { font-size: 0.85em; color: #676879; margin-top: 4px; }
+
+    /* === כרטיסי שיחות === */
     .call-card {
         background: #ffffff;
-        border: 0.5px solid #e8dfd1;
-        border-right: 4px solid #84a59d;
-        border-radius: 12px;
+        border: 0.5px solid #e1e5f1;
+        border-right: 4px solid #00c875;
+        border-radius: 8px;
         padding: 14px 18px;
-        margin-bottom: 10px;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-    .call-card:hover {
-        transform: translateX(-2px);
-        box-shadow: 0 2px 8px rgba(61, 47, 36, 0.06);
+        margin-bottom: 8px;
     }
 
-    .task-title {
-        font-size: 1.05em;
-        font-weight: 600;
-        color: #3d2f24;
-    }
-    .task-meta {
-        font-size: 0.85em;
-        color: #8a7a6c;
-        margin-top: 4px;
-    }
-
-    /* === תגיות תאריך - בצורת גלולה === */
+    /* === תגיות תאריך === */
     .due-badge-overdue {
-        background: #b54a30;
-        color: white;
-        padding: 4px 12px;
-        border-radius: 14px;
-        font-size: 0.8em;
-        font-weight: 500;
-        display: inline-block;
+        background: #e2445c; color: white;
+        padding: 4px 12px; border-radius: 14px;
+        font-size: 0.8em; font-weight: 500; display: inline-block;
     }
     .due-badge-soon {
-        background: #d6a35c;
-        color: white;
-        padding: 4px 12px;
-        border-radius: 14px;
-        font-size: 0.8em;
-        font-weight: 500;
-        display: inline-block;
+        background: #fdab3d; color: white;
+        padding: 4px 12px; border-radius: 14px;
+        font-size: 0.8em; font-weight: 500; display: inline-block;
     }
     .due-badge-ok {
-        background: #ebe2d1;
-        color: #6b5a48;
-        padding: 4px 12px;
-        border-radius: 14px;
-        font-size: 0.8em;
-        display: inline-block;
-    }
-
-    /* === מטריקות (מספרים בדשבורד) === */
-    [data-testid="stMetricValue"] {
-        color: #d68563 !important;
-        font-weight: 600 !important;
-    }
-    [data-testid="stMetricLabel"] {
-        color: #8a7a6c !important;
-        font-weight: 500 !important;
-    }
-    [data-testid="stMetric"] {
-        background: white;
-        border: 0.5px solid #e8dfd1;
-        border-radius: 10px;
-        padding: 12px 16px;
+        background: #f6f7fb; color: #676879;
+        border: 0.5px solid #e1e5f1;
+        padding: 4px 12px; border-radius: 14px;
+        font-size: 0.8em; display: inline-block;
     }
 
     /* === כפתורים === */
     .stButton button {
-        border-radius: 10px !important;
+        border-radius: 8px !important;
         font-weight: 500 !important;
         transition: all 0.15s ease;
     }
     .stButton button[kind="primary"] {
-        background-color: #d68563 !important;
+        background-color: #0073ea !important;
         color: white !important;
         border: none !important;
     }
     .stButton button[kind="primary"]:hover {
-        background-color: #c0704d !important;
-        transform: translateY(-1px);
+        background-color: #0260b9 !important;
     }
     .stButton button[kind="secondary"] {
         background-color: white !important;
-        color: #3d2f24 !important;
-        border: 1px solid #e8dfd1 !important;
+        color: #323338 !important;
+        border: 1px solid #e1e5f1 !important;
     }
     .stButton button[kind="secondary"]:hover {
-        background-color: #f5ede0 !important;
-        border-color: #d68563 !important;
-        color: #3d2f24 !important;
+        background-color: #f6f7fb !important;
+        border-color: #0073ea !important;
     }
 
     /* === שדות קלט === */
     .stTextInput input, .stTextArea textarea,
     .stSelectbox div[data-baseweb="select"], .stDateInput input {
         border-radius: 8px !important;
-        border-color: #e8dfd1 !important;
+        border-color: #e1e5f1 !important;
     }
-    .stTextInput input:focus, .stTextArea textarea:focus {
-        border-color: #d68563 !important;
-        box-shadow: 0 0 0 2px rgba(214, 133, 99, 0.15) !important;
-    }
+
+    /* === Alert boxes === */
+    .stAlert { border-radius: 8px !important; border: none !important; }
 
     /* === Expander === */
     .streamlit-expanderHeader {
         background-color: white !important;
-        border: 0.5px solid #e8dfd1 !important;
-        border-radius: 10px !important;
-        color: #3d2f24 !important;
-    }
-
-    /* === רדיו וצ'קבוקס === */
-    .stRadio label, .stCheckbox label {
-        color: #3d2f24 !important;
+        border: 0.5px solid #e1e5f1 !important;
+        border-radius: 8px !important;
+        color: #323338 !important;
     }
 
     /* === ביישור גובה כרטיסי דשבורד === */
@@ -223,24 +192,6 @@ st.markdown("""
         justify-content: center !important;
         text-align: center !important;
         overflow: hidden !important;
-    }
-    [data-testid="column"] h4,
-    [data-testid="stColumn"] h4 {
-        height: 72px !important;
-        min-height: 72px !important;
-        max-height: 72px !important;
-        margin-top: 0 !important;
-        margin-bottom: 10px !important;
-        padding-top: 0 !important;
-        overflow: hidden !important;
-        display: block !important;
-    }
-    [data-testid="column"] h4,
-    [data-testid="stColumn"] h4 {
-        min-height: 60px !important;
-        margin-bottom: 8px !important;
-        display: flex !important;
-        align-items: flex-end !important;
     }
 
     /* === הסתרת פוטר === */
@@ -730,8 +681,8 @@ def render_project_chart(tasks_list):
         )
 
     chart_html = (
-        '<div style="background:white;border-radius:12px;padding:18px 24px;border:0.5px solid #e8dfd1;margin:20px 0;">'
-        '<div style="font-size:0.95em;color:#3d2f24;margin-bottom:16px;font-weight:500;">📊 משימות פעילות לפי פרויקט</div>'
+        '<div style="background:white;border-radius:12px;padding:18px 24px;border:0.5px solid #e1e5f1;margin:20px 0;">'
+        '<div style="font-size:0.95em;color:#323338;margin-bottom:16px;font-weight:500;">📊 משימות פעילות לפי פרויקט</div>'
         '<div style="display:flex;gap:12px;align-items:stretch;">'
         + "".join(bars_html)
         + '</div></div>'
@@ -775,11 +726,11 @@ def render_monday_board(tasks_list):
 # ============================================================
 def page_dashboard():
     st.markdown(
-        '<div style="text-align:center; padding:28px 0 18px; margin-bottom:24px; border-bottom:1px solid #e8dfd1;">'
-        '<h1 style="color:#3d2f24; font-size:2.4em; font-weight:600; margin:0; letter-spacing:-0.02em;">'
+        '<div style="text-align:center; padding:28px 0 18px; margin-bottom:24px; border-bottom:1px solid #e1e5f1;">'
+        '<h1 style="color:#323338; font-size:2.4em; font-weight:600; margin:0; letter-spacing:-0.02em;">'
         '📋 ניהול משימות מחלקת שירות'
         '</h1>'
-        '<p style="color:#8a7a6c; font-size:0.95em; margin:10px 0 0 0;">דשבורד מרכזי</p>'
+        '<p style="color:#676879; font-size:0.95em; margin:10px 0 0 0;">דשבורד מרכזי</p>'
         '</div>',
         unsafe_allow_html=True
     )
